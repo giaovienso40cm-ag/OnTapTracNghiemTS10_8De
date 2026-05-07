@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ôn tập Trắc nghiệm TS 10</title>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$']], processEscapes: true },
+            options: { ignoreHtmlClass: 'tex2jax_ignore', processHtmlClass: 'tex2jax_process' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style>
+        @keyframes blink-warning {
+            0% { background-color: #c62828; color: white; transform: scale(1); }
+            50% { background-color: #ffeb3b; color: black; transform: scale(1.05); }
+            100% { background-color: #c62828; color: white; transform: scale(1); }
+        }
+        .timer-box {
+            font-weight: bold; color: var(--white); background: #2e7d32; 
+            padding: 3px 10px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            display: inline-block; transition: background 0.3s;
+        }
+        .timer-warning { animation: blink-warning 1s infinite; }
+        :root { --board: #073b31; --white: #ffffff; --gold: #ffeb3b; --wood: #3e2723; }
+
+        body {
+            background-color: var(--board); color: var(--white);
+            font-family: 'Times New Roman', serif; font-size: 130%; 
+            margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+        }
+
+        .persistent-header {
+            width: 100%; text-align: center; background: var(--wood); color: var(--gold);
+            padding: 15px 0; font-weight: bold; border-bottom: 4px solid #1b1b1b;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4); text-transform: uppercase;
+            position: sticky; top: 0; z-index: 1000;
+        }
+
+        #quiz-app { width: 100%; max-width: 900px; padding: 25px; box-sizing: border-box; }
+        .screen { display: none; }
+        .active { display: block; }
+
+        .welcome-box {
+            border: 5px double var(--white); padding: 40px; border-radius: 20px;
+            background: rgba(255,255,255,0.05); text-align: center;
+        }
+
+        input { width: 100%; padding: 15px; font-size: 1.2rem; border-radius: 10px; border: none; margin: 15px 0; box-sizing: border-box; }
+
+        .chapter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px; }
+        .btn-chapter {
+            padding: 15px; background: rgba(255,255,255,0.1); border: 2px solid var(--gold); 
+            color: var(--gold); border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1.1rem; transition: 0.3s;
+        }
+        .btn-chapter:hover { background: rgba(255,255,255,0.2); transform: scale(1.02); }
+        .btn-chapter.done { background: #2e7d32; border-color: #a5d6a7; color: white; cursor: default; transform: none; }
+
+        .option {
+            border: 2px solid var(--white); padding: 15px 20px; margin: 15px 0;
+            border-radius: 12px; cursor: pointer; transition: 0.3s; background: rgba(255,255,255,0.1);
+        }
+        .option:hover { background: rgba(255,255,255,0.2); border-color: var(--gold); box-shadow: 0 0 20px var(--gold); transform: scale(1.02); }
+        .correct { background-color: #2e7d32 !important; border-color: #a5d6a7 !important; color: white; }
+        .wrong { background-color: #c62828 !important; border-color: #ef9a9a !important; color: white; }
+
+        .explanation {
+            background: #ffffff; color: #000000; padding: 20px; border-radius: 12px;
+            margin-top: 20px; display: none; border-left: 10px solid var(--gold); font-size: 1.1rem;
+        }
+
+        .btn-action {
+            width: 100%; padding: 18px; background: var(--gold); color: #000; border: none; 
+            border-radius: 15px; font-size: 1.4rem; font-weight: bold; cursor: pointer; transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); margin-top: 15px;
+        }
+        .btn-action:not(:disabled):hover { filter: brightness(1.1); transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4); }
+        .btn-action:not(:disabled):active { filter: brightness(0.9); transform: translateY(2px); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); }
+
+        #music-btn {
+            position: fixed; bottom: 20px; right: 20px; z-index: 2000;
+            background: var(--gold); border: none; border-radius: 50%; width: 50px; height: 50px;
+            cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.5); font-size: 1.5rem;
+        }
+
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 3000; justify-content: center; align-items: center; }
+        .warning-box { background: var(--board); border: 3px solid #f44336; padding: 30px; border-radius: 15px; text-align: center; color: var(--white); max-width: 80%; box-shadow: 0 0 20px rgba(244, 67, 54, 0.5); }
+        .btn-exit { background: #f44336; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; font-weight: bold; margin-top: 15px;}
+        
+        .summary-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .summary-table th, .summary-table td { border: 1px solid var(--white); padding: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="persistent-header">ÔN TẬP TRẮC NGHIỆM TS10</div>
+<button id="music-btn" onclick="toggleMusic()">🎵</button>
+
+<div id="quiz-app">
+    <div id="start-screen" class="screen active">
+        <div class="welcome-box">
+            <h2 style="color: var(--gold);">CHÀO MỪNG CÁC EM</h2>
+            <div style="text-align: left;">
+                <label>Họ và tên học sinh:</label>
+                <input type="text" id="name-in" placeholder="Nhập họ tên...">
+                <label>Lớp:</label>
+                <input type="text" id="class-in" placeholder="Ví dụ: 9A1">
+            </div>
+            <button class="btn-action" onclick="login()">VÀO DANH SÁCH BỘ ĐỀ</button>
+            <button class="btn-action" style="background: #f44336; color: white; font-size: 1rem; padding: 10px;" onclick="resetProgress()">XÓA DỮ LIỆU CŨ LÀM LẠI TỪ ĐẦU</button>
+        </div>
+    </div>
+
+    <div id="chapter-screen" class="screen">
+        <div class="welcome-box">
+            <h2 style="color: var(--gold);">DANH SÁCH BỘ ĐỀ</h2>
+            <p>Học sinh: <span id="disp-name" style="color:#a5d6a7; font-weight:bold;"></span></p>
+            <div id="chapter-list" class="chapter-grid"></div>
+            <button id="btn-final-summary" class="btn-action" style="display:none; background: #4caf50; color: white;" onclick="showFinalSummary()">XEM TỔNG KẾT TOÀN BỘ</button>
+        </div>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+       <div style="font-size: 0.9em; color: var(--gold); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+            <span id="quiz-chapter-title" style="font-weight:bold; text-transform:uppercase;"></span>
+            <span>Câu: <span id="q-idx">1</span>/<span id="q-total"></span></span>
+            <div id="timer" class="timer-box">⏱ 60:00</div>
+        </div>
+        <div id="q-txt" style="font-weight: bold; margin-bottom: 20px;"></div>
+        <div id="options-box"></div>
+        <div id="explain-box" class="explanation"></div>
+        <button class="btn-action" id="next-btn" style="display: none;" onclick="goNext()">Câu tiếp theo</button>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <div class="welcome-box">
+            <h2 style="color: var(--gold);">HOÀN THÀNH BỘ ĐỀ</h2>
+            <p id="final-score" style="font-size: 2.2rem; font-weight: bold;"></p>
+            <p id="detail-score" style="font-size: 1.2rem; margin-bottom: 25px; color: #a5d6a7;"></p>
+            <button class="btn-action" onclick="backToChapters()">QUAY LẠI DANH SÁCH BỘ ĐỀ</button>
+        </div>
+    </div>
+
+    <div id="final-summary-screen" class="screen">
+        <div class="welcome-box">
+            <h2 style="color: var(--gold);">TỔNG KẾT TOÀN BỘ KHÓA ÔN TẬP</h2>
+            <table class="summary-table" id="summary-table-content">
+                <tr><th>Bộ đề Trắc nghiệm</th><th>Số câu đúng</th><th>Điểm (Hệ 10)</th></tr>
+            </table>
+            <h3 style="color: #a5d6a7; margin-top: 20px;">ĐIỂM TRUNG BÌNH TOÀN BỘ: <span id="avg-score"></span></h3>
+            <button id="btn-submit-score" class="btn-action" onclick="sendPoints()">NỘP KẾT QUẢ LÊN HỆ THỐNG</button>
+        </div>
+    </div>
+</div>
+
+<div id="warning-overlay" class="overlay">
+    <div class="warning-box">
+        <h3>⚠️ PHÁT HIỆN GIAN LẬN!</h3>
+        <p style="font-size: 1.2rem;">Hệ thống phát hiện em đã chuyển thẻ hoặc mở ứng dụng khác. Bài làm Bộ đề hiện tại đã bị hủy.</p>
+        <button class="btn-exit" onclick="confirmExit()">Làm lại Bộ đề này</button>
+    </div>
+</div>
+
+<audio id="bg-music" loop preload="auto"><source src="nhac-nen.mp3" type="audio/mpeg"></audio>
+<audio id="snd-correct" src="dung.mp3" preload="auto"></audio>
+<audio id="snd-wrong" src="sai.mp3" preload="auto"></audio>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxfWniDqvX04AKQomqftm5stOjHkRPZfjdK-0SYaCKm6o_lwVU66tPWg1AufTNkLlxP/exec";
+
+    // --- DỮ LIỆU 10 CHƯƠNG (TRÍCH XUẤT TỪ DOCX) ---
+    const CHAPTERS = [
+        {
+            title: "ĐỀ NĂM .......",
+            data: [
+  { 
+    q: "Câu 1. Cho tam giác đều nội tiếp đường tròn $(O)$, có cạnh là $6\\text{ cm}$. Bán kính của đường tròn $(O)$ là", 
+    a: ["$2\\sqrt{3}\\text{ cm}$", "$\\frac{3\\sqrt{3}}{2}\\text{ cm}$", "$\\sqrt{3}\\text{ cm}$", "$3\\sqrt{3}\\text{ cm}$"], 
+    c: 0, 
+    e: "Bán kính đường tròn ngoại tiếp tam giác đều cạnh $a$ là $R = \\frac{a\\sqrt{3}}{3} = \\frac{6\\sqrt{3}}{3} = 2\\sqrt{3}$ (cm)." 
+  },
+  { 
+    q: "Câu 2. Giá trị lượng giác $\\sin 55^\\circ$ bằng giá trị lượng giác", 
+    a: ["$\\cot 35^\\circ$", "$\\sin 35^\\circ$", "$\\tan 35^\\circ$", "$\\cos 35^\\circ$"], 
+    c: 3, 
+    e: "Với hai góc phụ nhau ta có $\\sin 55^\\circ = \\cos(90^\\circ - 55^\\circ) = \\cos 35^\\circ$." 
+  },
+  { 
+    q: "Câu 3. Tứ giác $ABCD$ nội tiếp đường tròn, nếu biết số đo của góc $B$ bằng $100^\\circ$ thì khi đó số đo của góc $D$ sẽ là", 
+    a: ["$50^\\circ$", "$100^\\circ$", "$80^\\circ$", "$90^\\circ$"], 
+    c: 2, 
+    e: "Tứ giác $ABCD$ nội tiếp đường tròn nên tổng hai góc đối $\\widehat{B} + \\widehat{D} = 180^\\circ \\Rightarrow \\widehat{D} = 180^\\circ - 100^\\circ = 80^\\circ$." 
+  },
+  { 
+    q: "Câu 4. Biểu đồ bên dưới biểu diễn cỡ giày của học sinh nam khối 9 ở trường $X$. [Hinh_1] Xác định cỡ giày mà học sinh nam sử dụng ít nhất?", 
+    a: ["$39$", "$40$", "$37$", "$38$"], 
+    c: 0, 
+    e: "Quan sát biểu đồ, cột ứng với cỡ giày 39 là thấp nhất (chỉ có 10 học sinh), nên cỡ giày 39 được sử dụng ít nhất." 
+  },
+  { 
+    q: "Câu 5. Kết quả đúng của $\\sqrt{4}\\cdot\\sqrt{25}$ là", 
+    a: ["$4$", "$100$", "$25$", "$10$"], 
+    c: 3, 
+    e: "Ta có $\\sqrt{4}\\cdot\\sqrt{25} = 2 \\cdot 5 = 10$." 
+  },
+  { 
+    q: "Câu 6. Cho đường tròn $(O)$ và các điểm $A,B,C$ trên $(O)$ như hình vẽ sau. [Hinh_2] Tính số đo của góc nội tiếp $\\widehat{BAC}$.", 
+    a: ["$60^\\circ$", "$120^\\circ$", "$30^\\circ$", "$90^\\circ$"], 
+    c: 0, 
+    e: "Góc nội tiếp $\\widehat{BAC}$ bằng nửa số đo góc ở tâm $\\widehat{BOC}$ chắn cùng cung $BC$, suy ra $\\widehat{BAC} = \\frac{1}{2} \\cdot 120^\\circ = 60^\\circ$." 
+  },
+  { 
+    q: "Câu 7. Cho mẫu số liệu ghép nhóm về thống kê nhiệt độ tại một địa điểm của tỉnh $X$, ta có bảng số liệu sau:\\nNhiệt độ ($^\\circ$C) | $[18;21)$ | $[21;24)$ | $[24;27)$ | $[27;30)$\\nSố ngày | 6 | 12 | 9 | 3\\nTính xác suất để nhiệt độ địa điểm đó nhỏ hơn $24^\\circ\\text{C}$?", 
+    a: ["$\\frac{2}{5}$", "$\\frac{1}{5}$", "$\\frac{3}{10}$", "$\\frac{3}{5}$"], 
+    c: 3, 
+    e: "Tổng số ngày là $6 + 12 + 9 + 3 = 30$. Số ngày có nhiệt độ nhỏ hơn $24^\\circ\\text{C}$ là $6 + 12 = 18$. Xác suất là $\\frac{18}{30} = \\frac{3}{5}$." 
+  },
+  { 
+    q: "Câu 8. Xét phép thử: \"gieo lần lượt 2 đồng xu cân đối và đồng chất\". Số phần tử của không gian mẫu là", 
+    a: ["$3$", "$2$", "$1$", "$4$"], 
+    c: 3, 
+    e: "Gieo 2 đồng xu, mỗi đồng xu có 2 khả năng (Sấp, Ngửa). Số phần tử của không gian mẫu là $2 \\cdot 2 = 4$." 
+  },
+  { 
+    q: "Câu 9. Hình tròn có bán kính là $12$ và số đo cung $AmB$ là $45^\\circ$ như hình bên dưới, khi đó độ dài của cung $AmB$ là [Hinh_3]", 
+    a: ["$3\\pi$", "$\\frac{3}{2}\\pi$", "$6\\pi$", "$\\frac{1}{4}\\pi$"], 
+    c: 0, 
+    e: "Độ dài cung tròn là $l = \\frac{\\pi R n}{180} = \\frac{\\pi \\cdot 12 \\cdot 45}{180} = 3\\pi$." 
+  },
+  { 
+    q: "Câu 10. Nghiệm của bất phương trình $2x - 4 > 0$ là", 
+    a: ["$x \\geq 2$", "$x \\leq 2$", "$x > 2$", "$x < 2$"], 
+    c: 2, 
+    e: "Ta có $2x - 4 > 0 \\Leftrightarrow 2x > 4 \\Leftrightarrow x > 2$." 
+  },
+  { 
+    q: "Câu 11. Xác suất xuất hiện mặt chẵn khi gieo một con xúc xắc cân đối và đồng chất là", 
+    a: ["$\\frac{1}{3}$", "$\\frac{1}{2}$", "$\\frac{1}{6}$", "$1$"], 
+    c: 1, 
+    e: "Không gian mẫu có 6 phần tử. Các mặt chẵn là $\\{2, 4, 6\\}$ (có 3 kết quả thuận lợi). Xác suất là $\\frac{3}{6} = \\frac{1}{2}$." 
+  },
+  { 
+    q: "Câu 12. Phương trình $x^2 - 6x + 5 = 0$ có tích của hai nghiệm là", 
+    a: ["$1$", "$5$", "$6$", "$-6$"], 
+    c: 1, 
+    e: "Theo định lí Vi-ét, tích hai nghiệm của phương trình bậc hai là $x_1 x_2 = \\frac{c}{a} = \\frac{5}{1} = 5$." 
+  },
+  { 
+    q: "Câu 13. Một hình cầu có đường kính $10\\text{ cm}$ thì diện tích của mặt cầu đó là", 
+    a: ["$100\\pi\\text{ cm}^2$", "$400\\text{ cm}^2$", "$100\\text{ cm}^2$", "$400\\pi\\text{ cm}^2$"], 
+    c: 0, 
+    e: "Bán kính hình cầu là $R = \\frac{10}{2} = 5\\text{ cm}$. Diện tích mặt cầu là $S = 4\\pi R^2 = 4\\pi \\cdot 5^2 = 100\\pi\\text{ cm}^2$." 
+  },
+  { 
+    q: "Câu 14. Nghiệm của hệ phương trình $\\begin{cases} 2x - 3y = -5 \\\\ 4x + 3y = 17 \\end{cases}$ là", 
+    a: ["$(-2; -3)$", "$(2; -3)$", "$(2; 3)$", "$(-2; 3)$"], 
+    c: 2, 
+    e: "Cộng hai phương trình vế theo vế ta được $6x = 12 \\Leftrightarrow x = 2$. Thay $x = 2$ vào phương trình trên: $2(2) - 3y = -5 \\Leftrightarrow 3y = 9 \\Leftrightarrow y = 3$. Hệ có nghiệm $(2; 3)$." 
+  },
+  { 
+    q: "Câu 15. Chiều cao của cây ở hình bên dưới là [Hinh_4]", 
+    a: ["$30\\sqrt{3}\\text{ m}$", "$15\\text{ m}$", "$10\\sqrt{3}\\text{ m}$", "$15\\sqrt{3}\\text{ m}$"], 
+    c: 2, 
+    e: "Áp dụng hệ thức lượng trong tam giác vuông, chiều cao của cây là cạnh góc vuông đối diện góc $30^\\circ$: $h = 30 \\cdot \\tan 30^\\circ = 30 \\cdot \\frac{\\sqrt{3}}{3} = 10\\sqrt{3}$ (m)." 
+  }
+]
+
+        },
+        {
+            title: "ĐỀ TS NĂM 2019-2020",
+            data: [
+  { 
+    q: "Câu 1. Giá trị của $\\frac{\\sqrt{80}}{\\sqrt{5}}$ bằng", 
+    a: ["$16$", "$4\\sqrt{5}$", "$\\sqrt{4}$", "$4$"], 
+    c: 3, 
+    e: "Ta có $\\frac{\\sqrt{80}}{\\sqrt{5}} = \\sqrt{\\frac{80}{5}} = \\sqrt{16} = 4$." 
+  },
+  { 
+    q: "Câu 2. Tính diện tích $S$ của hình cầu có bán kính $R = 12\\text{ m}$.", 
+    a: ["$S = 2304\\pi\\text{ (m}^2\\text{)}$", "$S = 1296\\pi\\text{ (m}^2\\text{)}$", "$S = 576\\pi\\text{ (m}^2\\text{)}$", "$S = 144\\pi\\text{ (m}^2\\text{)}$"], 
+    c: 2, 
+    e: "Diện tích hình cầu là $S = 4\\pi R^2 = 4\\pi \\cdot 12^2 = 576\\pi\\text{ (m}^2\\text{)}$." 
+  },
+  { 
+    q: "Câu 3. Cho các điểm sau, điểm nào không thuộc đồ thị của hàm số $y = -3x + 1$?", 
+    a: ["$M(1; -4)$", "$N(-1; 4)$", "$P(2; -5)$", "$Q(0; 1)$"], 
+    c: 0, 
+    e: "Thay toạ độ điểm $M(1; -4)$ vào hàm số ta có: $-4 \\neq -3 \\cdot 1 + 1$ (vì $-4 \\neq -2$). Vậy $M$ không thuộc đồ thị." 
+  },
+  { 
+    q: "Câu 4. Phương trình $x^2 - 6x + 5 = 0$ có nghiệm là:", 
+    a: ["$x_1 = -1; x_2 = -5$", "$x_1 = 1; x_2 = 5$", "$x_1 = -1; x_2 = 5$", "$x_1 = 1; x_2 = -5$"], 
+    c: 1, 
+    e: "Phương trình có dạng $a+b+c = 1 - 6 + 5 = 0$ nên có hai nghiệm phân biệt $x_1 = 1; x_2 = \\frac{c}{a} = 5$." 
+  },
+  { 
+    q: "Câu 5. Hệ phương trình $\\begin{cases} 2x + y = 5 \\\\ x = 1 + y \\end{cases}$ có nghiệm là:", 
+    a: ["$(x; y) = (2; 1)$", "$(x; y) = (1; 3)$", "$(x; y) = (-2; -1)$", "$(x; y) = (6; 5)$"], 
+    c: 0, 
+    e: "Thay $x = 1 + y$ vào phương trình đầu ta được: $2(1+y) + y = 5 \\Leftrightarrow 3y = 3 \\Leftrightarrow y = 1 \\Rightarrow x = 2$. Hệ có nghiệm $(2; 1)$." 
+  },
+  { 
+    q: "Câu 6. Biết phương trình bậc hai $x^2 - 2019x - 2020 = 0$ có hai nghiệm phân biệt $x_1, x_2$. Khi đó giá trị của tích $x_1 x_2$ bằng", 
+    a: ["$-2019$", "$2019$", "$-2020$", "$2020$"], 
+    c: 2, 
+    e: "Theo hệ thức Vi-ét, tích hai nghiệm của phương trình là $x_1 x_2 = \\frac{c}{a} = -2020$." 
+  },
+  { 
+    q: "Câu 7. Tính thể tích $V$ của hình trụ có bán kính đáy $r = 3$ và chiều cao $h = 10$.", 
+    a: ["$V = 30$", "$V = 90$", "$V = 30\\pi$", "$V = 90\\pi$"], 
+    c: 3, 
+    e: "Thể tích hình trụ là $V = \\pi r^2 h = \\pi \\cdot 3^2 \\cdot 10 = 90\\pi$." 
+  },
+  { 
+    q: "Câu 8. Biểu thức $P(x) = \\sqrt{2019 - 3x} + x - 2020$ có nghĩa khi", 
+    a: ["$x \\geq 673$", "$x \\leq 673$", "$x < 2019$", "$x \\neq 2020$"], 
+    c: 1, 
+    e: "Biểu thức có nghĩa khi biểu thức dưới dấu căn không âm, tức là $2019 - 3x \\geq 0 \\Leftrightarrow 3x \\leq 2019 \\Leftrightarrow x \\leq 673$." 
+  },
+  { 
+    q: "Câu 9. Tìm $m$ để hai đường thẳng $(d_1): y = 2mx + 3$ và $(d_2): y = (m + 1)x + 2$ song song.", 
+    a: ["$m = 0$", "$m = 1$", "$m = -1$", "$m = 2$"], 
+    c: 1, 
+    e: "Hai đường thẳng song song khi và chỉ khi $2m = m + 1$ và $3 \\neq 2$ (luôn đúng). Giải ra ta được $m = 1$." 
+  },
+  { 
+    q: "Câu 10. Người ta gọi tỉ lệ vàng $\\varphi = \\frac{a}{b} = \\frac{a+b}{a}$. Tìm $\\varphi$. [Hinh_1]", 
+    a: ["$\\varphi = 2$", "$\\varphi = \\frac{3}{2}$", "$\\varphi = \\frac{\\sqrt{5}+1}{2}$", "$\\varphi = \\frac{\\sqrt{5}-1}{2}$"], 
+    c: 2, 
+    e: "Từ giả thiết $\\varphi = \\frac{a+b}{a} = 1 + \\frac{b}{a} = 1 + \\frac{1}{\\varphi}$. Ta có phương trình $\\varphi^2 - \\varphi - 1 = 0$. Vì $\\varphi > 0$ nên $\\varphi = \\frac{1+\\sqrt{5}}{2}$." 
+  },
+  { 
+    q: "Câu 11. Một hoa văn trang trí được tạo ra từ một miếng bìa mỏng hình vuông cạnh $10\\text{ cm}$ bằng cách khoét đi bốn phần bằng nhau có hình dạng parabol như hình bên. Biết $AB = 5\\text{ cm}$, $OH = 4\\text{ cm}$ và diện tích phần gạch sọc được tính theo công thức $S = \\frac{4}{3}OA \\cdot OH$. Tính diện tích bề mặt hoa văn đó (phần hình được tô đen), <br><br><div style='text-align:center;'><img src='Hinh2_11.png' alt='Hình 1' style='max-width:350px; border-radius:8px;'></div>",
+    a: ["$\\frac{160}{3}\\text{ cm}^2$", "$\\frac{140}{3}\\text{ cm}^2$", "$\\frac{14}{3}\\text{ cm}^2$", "$50\\text{ cm}^2$"], 
+    c: 1, 
+    e: "Diện tích hình vuông là $10^2 = 100\\text{ cm}^2$. Diện tích một phần gạch sọc là $S = \\frac{4}{3}OA \\cdot OH = \\frac{4}{3} \\cdot 2,5 \\cdot 4 = \\frac{40}{3}\\text{ cm}^2$. Có $4$ phần bị khoét đi, nên diện tích bề mặt hoa văn là $100 - 4 \\cdot \\frac{40}{3} = \\frac{140}{3}\\text{ cm}^2$." 
+  },
+  { 
+    q: "Câu 12. Cho đường tròn $(O)$ đi qua hai đỉnh $A, B$ và tiếp xúc với cạnh $CD$ của một hình vuông (tham khảo hình vẽ). Tính bán kính $R$ của đường tròn đó biết cạnh hình vuông dài $8\\text{ cm}$, <br><br><div style='text-align:center;'><img src='Hinh2_12.png' alt='Hình 2' style='max-width:350px; border-radius:8px;'></div>",
+    a: ["$R = 4\\text{ cm}$", "$R = 6\\text{ cm}$", "$R = 4\\sqrt{2}\\text{ cm}$", "$R = 5\\text{ cm}$"], 
+    c: 3, 
+    e: "Gọi trung điểm của $AB$ là $N$, điểm tiếp xúc với $CD$ là $M$. Ta có $ON \\bot AB$ và $OM \\bot CD$ nên $N, O, M$ thẳng hàng và $NM = 8\\text{ cm}$. Khi đó $ON = 8 - R$ và $AN = \\frac{8}{2} = 4\\text{ cm}$. Áp dụng định lí Pytago cho $\\Delta ONA$ vuông tại $N$: $R^2 = (8 - R)^2 + 4^2 \\Rightarrow 16R = 80 \\Rightarrow R = 5\\text{ cm}$." 
+  },
+  { 
+    q: "Câu 13. Máy kéo nông nghiệp có hai bánh sau to hơn bánh trước. Khi bơm căng, bánh xe sau có đường kính $1,672\\text{ m}$ và bánh trước có đường kính là $88\\text{ cm}$. Hỏi khi xe chạy trên đoạn đường thẳng bánh xe sau lăn được 10 vòng thì bánh trước lăn được mấy vòng? [Hinh_4]", 
+    a: ["17", "18", "19", "20"], 
+    c: 2, 
+    e: "Quãng đường xe đi được khi bánh sau lăn 10 vòng là $10 \\cdot \\pi \\cdot d_{\\text{sau}} = 10\\pi \\cdot 1,672$ (m). Số vòng lăn của bánh trước là $\\frac{10\\pi \\cdot 1,672}{\\pi \\cdot 0,88} = 19$ (vòng)." 
+  },
+  { 
+    q: "Câu 14. Trong hình vẽ bên, biết $AB$ là đường kính của đường tròn $(O)$, $E$ là điểm chính giữa của cung $BC$ và $\\widehat{BAC} = 60^\\circ$. Tính số đo của góc $\\widehat{BDE}$, <br><br><div style='text-align:center;'><img src='Hinh2_14.png' alt='Hình 3' style='max-width:350px; border-radius:8px;'></div>",
+    a: ["$\\widehat{BDE} = 30^\\circ$", "$\\widehat{BDE} = 40^\\circ$", "$\\widehat{BDE} = 45^\\circ$", "$\\widehat{BDE} = 60^\\circ$"], 
+    c: 0, 
+    e: "Góc $\\widehat{BAC} = 60^\\circ$ là góc nội tiếp chắn cung $BC \\Rightarrow \\text{sđ}\\stackrel{\\frown}{BC} = 120^\\circ$. Vì $E$ là điểm chính giữa cung $BC$ nên $\\text{sđ}\\stackrel{\\frown}{BE} = 60^\\circ$. Góc $\\widehat{BDE}$ là góc nội tiếp chắn cung $BE$ nên $\\widehat{BDE} = \\frac{1}{2}\\text{sđ}\\stackrel{\\frown}{BE} = 30^\\circ$." 
+  },
+  { 
+    q: "Câu 15. Nhân ngày Quốc tế thiếu nhi 1/6 vừa qua. Giáo viên chủ nhiệm lớp 9A phân công 13 học sinh (gồm $x$ nam và $y$ nữ) tham gia gói 80 phần quà cho các em thiếu nhi. Biết tổng số quà học sinh nam gói được bằng tổng số quà học sinh nữ gói được. Số quà mỗi bạn nam gói nhiều hơn số quà mỗi bạn nữ gói là 3 phần. Tính giá trị của $P = 6x - 5y$.", 
+    a: ["$P = 23$", "$P = 70$", "$P = -70$", "$P = -10$"], 
+    c: 3, 
+    e: "Ta có hệ phương trình: $\\begin{cases} x + y = 13 \\\\ \\frac{40}{x} - \\frac{40}{y} = 3 \\end{cases}$. Thế $y = 13 - x$ vào phương trình sau ta được $\\frac{40}{x} - \\frac{40}{13-x} = 3 \\Leftrightarrow 3x^2 - 119x + 520 = 0 \\Rightarrow x = 5$ (thoả mãn). Với $x = 5 \\Rightarrow y = 8$. Suy ra $P = 6x - 5y = 6(5) - 5(8) = -10$." 
+  }
+]
+
+        },
+        {
+            title: "ĐỀ TS NĂM 2020-2021",
+            data: [
+  {
+    "q": "Câu 1. Giá trị của $\\sqrt{25+144}$ bằng",
+    "a": ["$13$", "$\\pm 13$", "$17$", "$169$"],
+    "c": 0,
+    "e": "Ta có $\\sqrt{25+144} = \\sqrt{169} = 13$."
+  },
+  {
+    "q": "Câu 2. Hàm số $y=(m-1)x+3$ là hàm số bậc nhất khi",
+    "a": ["$m \\neq -1$", "$m \\neq 0$", "$m \\neq 1$", "$m=1$"],
+    "c": 2,
+    "e": "Hàm số $y=(m-1)x+3$ là hàm số bậc nhất khi và chỉ khi hệ số của $x$ khác $0$, tức là $m-1 \\neq 0 \\Leftrightarrow m \\neq 1$."
+  },
+  {
+    "q": "Câu 3. Cặp số $(4;2)$ là nghiệm của hệ phương trình",
+    "a": [
+      "$\\begin{cases} 3x-4y=1 \\\\ x-5y=4 \\end{cases}$",
+      "$\\begin{cases} 3x+2y=8 \\\\ 2x-5y=18 \\end{cases}$",
+      "$\\begin{cases} x+y=6 \\\\ x-y=2 \\end{cases}$",
+      "$\\begin{cases} x-y=3 \\\\ 3x+2y=5 \\end{cases}$"
+    ],
+    "c": 2,
+    "e": "Thay $x=4, y=2$ vào hệ phương trình ở đáp án C ta được $\\begin{cases} 4+2=6 \\\\ 4-2=2 \\end{cases}$ (luôn đúng). Vậy $(4;2)$ là nghiệm của hệ phương trình này."
+  },
+  {
+    "q": "Câu 4. Cho hàm số bậc hai $f(x)=-x^2$. Giá trị của $f(3)$ bằng",
+    "a": ["$4$", "$9$", "$7$", "$-9$"],
+    "c": 3,
+    "e": "Thay $x=3$ vào hàm số, ta có $f(3) = -(3)^2 = -9$."
+  },
+  {
+    "q": "Câu 5. Nếu hai số có tổng bằng $3$ và tích bằng $-5$ thì hai số đó là nghiệm của phương trình nào?",
+    "a": ["$x^2-3x-5=0$", "$x^2-3x+5=0$", "$x^2+3x-5=0$", "$x^2+3x+5=0$"],
+    "c": 0,
+    "e": "Theo định lí Vi-ét đảo, hai số có tổng $S=3$ và tích $P=-5$ là nghiệm của phương trình $x^2 - Sx + P = 0$, tức là $x^2 - 3x - 5 = 0$."
+  },
+  {
+    "q": "Câu 6. Diện tích hình tròn có bán kính $R=6m$ bằng",
+    "a": ["$6\\pi\\ (m^2)$", "$12\\pi\\ (m^2)$", "$18\\pi\\ (m^2)$", "$36\\pi\\ (m^2)$"],
+    "c": 3,
+    "e": "Diện tích hình tròn là $S = \\pi R^2 = \\pi \\cdot 6^2 = 36\\pi\\ (m^2)$."
+  },
+  {
+    "q": "Câu 7. Điều kiện của $x$ để cho biểu thức $P=2020+\\sqrt{5-x}$ có nghĩa là",
+    "a": ["$x>5$", "$x \\le 5$", "$x<5$", "$x \\ge 5$"],
+    "c": 1,
+    "e": "Biểu thức chứa căn thức bậc hai có nghĩa khi biểu thức dưới dấu căn không âm, tức là $5-x \\ge 0 \\Leftrightarrow x \\le 5$."
+  },
+  {
+    "q": "Câu 8. Với giá trị nào của $a$ thì hai đường thẳng $y=-ax+1$ và $y=(2a-3)x-a$ song song với nhau?",
+    "a": ["$a=-1$", "$a=0$", "$a=1$", "$a \\neq -1$"],
+    "c": 2,
+    "e": "Hai đường thẳng song song khi và chỉ khi $\\begin{cases} a_1 = a_2 \\\\ b_1 \\neq b_2 \\end{cases} \\Leftrightarrow \\begin{cases} -a = 2a-3 \\\\ 1 \\neq -a \\end{cases} \\Leftrightarrow \\begin{cases} 3a = 3 \\\\ a \\neq -1 \\end{cases} \\Leftrightarrow a=1$."
+  },
+  {
+    "q": "Câu 9. Một hình trụ có đường kính đáy bằng $12$, chiều cao bằng $12$. Diện tích xung quanh của hình trụ đó bằng",
+    "a": ["$72\\pi$", "$140\\pi$", "$144\\pi$", "$288\\pi$"],
+    "c": 2,
+    "e": "Bán kính đáy là $r = \\frac{12}{2} = 6$. Diện tích xung quanh của hình trụ là $S_{xq} = 2\\pi r h = 2\\pi \\cdot 6 \\cdot 12 = 144\\pi$."
+  },
+  {
+    "q": "Câu 10. Phương trình nào sau đây có hai nghiệm trái dấu?",
+    "a": ["$x^2-3x+1=0$", "$x^2-x-5=0$", "$x^2+5x+2=0$", "$x^2+3x+5=0$"],
+    "c": 1,
+    "e": "Phương trình bậc hai có hai nghiệm trái dấu khi và chỉ khi $a$ và $c$ trái dấu ($a \\cdot c < 0$). Xét phương trình $x^2-x-5=0$ có $a \\cdot c = 1 \\cdot (-5) = -5 < 0$ nên phương trình có hai nghiệm trái dấu."
+  },
+  {
+    "q": "Câu 11. Cho đường tròn tâm $O$ và 3 điểm $A, B, C$ thuộc đường tròn $(O)$. Biết số đo góc $\\widehat{AOB} = 60^\\circ$. Tính số đo của góc $\\widehat{ACB}$, <br><br><div style='text-align:center;'><img src='Hinh3_11.png' alt='Hình 1' style='max-width:350px; border-radius:8px;'></div>",
+    "a": ["$30^\\circ$", "$150^\\circ$", "$120^\\circ$", "$60^\\circ$"],
+    "c": 0,
+    "e": "Góc nội tiếp $\\widehat{ACB}$ bằng nửa góc ở tâm $\\widehat{AOB}$ cùng chắn cung $AB$. Do đó $\\widehat{ACB} = \\frac{1}{2}\\widehat{AOB} = \\frac{1}{2} \\cdot 60^\\circ = 30^\\circ$."
+  },
+  {
+    "q": "Câu 12. Một sân khấu hình chữ nhật có đường chéo dài $10m$. Biết chiều dài hơn chiều rộng $2m$ (xem hình vẽ). Tính diện tích sân khấu., <br><br><div style='text-align:center;'><img src='Hinh3_12.png' alt='Hình 2' style='max-width:350px; border-radius:8px;'></div>",
+    "a": ["$20\\ m^2$", "$24\\ m^2$", "$100\\ m^2$", "$48\\ m^2$"],
+    "c": 3,
+    "e": "Gọi chiều rộng sân khấu là $x\\ (m, x>0)$, chiều dài là $x+2\\ (m)$. Theo định lí Pytago ta có: $x^2 + (x+2)^2 = 10^2 \\Leftrightarrow 2x^2 + 4x - 96 = 0 \\Leftrightarrow x = 6$ (nhận) hoặc $x = -8$ (loại). Chiều rộng là $6\\ m$, chiều dài là $6+2=8\\ m$. Diện tích sân khấu là $6 \\cdot 8 = 48\\ m^2$."
+  },
+  {
+    "q": "Câu 13. Đường kính bánh xe của một xe đạp là $60\\ cm$. Nếu bánh xe quay được $5000$ vòng thì xe đi được bao nhiêu $km$? (chọn $\\pi = 3,14$)",
+    "a": ["$4,71\\ (km)$", "$9,42\\ (km)$", "$18,84\\ (km)$", "$30\\ (km)$"],
+    "c": 1,
+    "e": "Chu vi của bánh xe là $C = \\pi d \\approx 3,14 \\cdot 60 = 188,4\\ (cm) = 1,884\\ (m)$. Quãng đường xe đi được khi bánh xe quay $5000$ vòng là $s = 5000 \\cdot 1,884 = 9420\\ (m) = 9,42\\ (km)$."
+  },
+  {
+    "q": "Câu 14. Phạt đền, còn gọi là đá phạt 11 mét, hay đá pê-nan-ti (theo từ tiếng Pháp penalty), là một kiểu đá phạt mà vị trí của quả đá phạt này là 11 mét, tính từ khung thành và thủ môn của đội bị phạt. Theo đó, em hãy tính xem “góc sút” của quả phạt 11 mét là bao nhiêu độ? (làm tròn đến hàng đơn vị). Biết rằng chiều rộng của cầu môn là $7,32\\ m$. (tham khảo hình vẽ). [Hinh_3]",
+    "a": ["$35^\\circ$", "$37^\\circ$", "$36^\\circ$", "$38^\\circ$"],
+    "c": 1,
+    "e": "Vị trí đặt bóng và hai cột dọc của cầu môn tạo thành một tam giác cân. Kẻ đường cao từ vị trí sút tới vạch vôi, gọi góc sút là $\\alpha$, ta có $\\tan \\left(\\frac{\\alpha}{2}\\right) = \\frac{7,32 / 2}{11} \\approx 0,3327$. Suy ra $\\frac{\\alpha}{2} \\approx 18,4^\\circ \\Rightarrow \\alpha \\approx 36,8^\\circ$. Làm tròn đến hàng đơn vị ta được góc sút xấp xỉ $37^\\circ$."
+  },
+  {
+    "q": "Câu 15. Hãy tính diện tích phần giấy để làm một cái quạt (không tính mép và phần thừa) với các kích thước như hình vẽ ($\\widehat{AOB} = 160^\\circ, OM = 10\\ cm, MB = 20\\ cm$)., <br><br><div style='text-align:center;'><img src='Hinh3_15.png' alt='Hình 3' style='max-width:350px; border-radius:8px;'></div>",
+    "a": ["$\\frac{40\\pi}{9}\\ (cm^2)$", "$\\frac{400\\pi}{9}\\ (cm^2)$", "$\\frac{1200\\pi}{9}\\ (cm^2)$", "$\\frac{3200\\pi}{9}\\ (cm^2)$"],
+    "c": 3,
+    "e": "Bán kính hình quạt lớn là $R = OM + MB = 10 + 20 = 30\\ cm$, bán kính hình quạt nhỏ là $r = OM = 10\\ cm$. Diện tích phần giấy làm quạt là hiệu diện tích của hai hình quạt tròn: $S = \\frac{\\pi R^2 n}{360} - \\frac{\\pi r^2 n}{360} = \\frac{\\pi \\cdot 160}{360}(30^2 - 10^2) = \\frac{4\\pi}{9} \\cdot 800 = \\frac{3200\\pi}{9}\\ (cm^2)$."
+  }
+]
+
+        },
+        {
+            title: "ĐỀ TS NĂM 2021-2022",
+            data: [
+  {
+    "q": "Câu 1. Giá trị biểu thức $\\frac{\\sqrt{128}}{\\sqrt{8}}$ bằng",
+    "a": ["$16$.", "$8$.", "$\\sqrt{2}$.", "$4$."],
+    "c": 3,
+    "e": "Ta có $\\frac{\\sqrt{128}}{\\sqrt{8}} = \\sqrt{\\frac{128}{8}} = \\sqrt{16} = 4$."
+  },
+  {
+    "q": "Câu 2. Giá trị của hàm số $y = \\frac{1}{3}x^2$ tại $x = -3$ là",
+    "a": ["$-3$.", "$3$.", "$9$.", "$-9$."],
+    "c": 1,
+    "e": "Thay $x = -3$ vào hàm số, ta có $y = \\frac{1}{3}(-3)^2 = \\frac{1}{3} \\cdot 9 = 3$."
+  },
+  {
+    "q": "Câu 3. Biệt thức của phương trình $x^2 - 3x - 1 = 0$ là",
+    "a": ["$\\Delta = 5$.", "$\\Delta = 13$.", "$\\Delta = -5$.", "$\\Delta = -13$."],
+    "c": 1,
+    "e": "Biệt thức $\\Delta = b^2 - 4ac = (-3)^2 - 4 \\cdot 1 \\cdot (-1) = 9 + 4 = 13$."
+  },
+  {
+    "q": "Câu 4. Phương trình $x^2 + 2x - 3 = 0$ có tập nghiệm là",
+    "a": ["$S = \\{1; 3\\}$.", "$S = \\{1; -3\\}$.", "$S = \\{-1; -3\\}$.", "$S = \\{-1; 3\\}$."],
+    "c": 1,
+    "e": "Phương trình có dạng $a + b + c = 1 + 2 + (-3) = 0$ nên có hai nghiệm là $x_1 = 1$ và $x_2 = \\frac{c}{a} = -3$. Tập nghiệm $S = \\{1; -3\\}$."
+  },
+  {
+    "q": "Câu 5. Điểm nào sau đây thuộc đồ thị hàm số $y = 5x + 2$?",
+    "a": ["$M(5; 2)$.", "$P(2; 0)$.", "$N(1; 7)$.", "$Q\\left(-\\frac{5}{2}; 0\\right)$."],
+    "c": 2,
+    "e": "Thay toạ độ điểm $N(1; 7)$ vào hàm số ta được $7 = 5 \\cdot 1 + 2$ (luôn đúng). Vậy $N(1; 7)$ thuộc đồ thị hàm số."
+  },
+  {
+    "q": "Câu 6. Nếu đường tròn có bán kính bằng $3$ thì đường tròn đó có chu vi bằng",
+    "a": ["$2\\pi$.", "$9\\pi$.", "$6\\pi$.", "$3\\pi$."],
+    "c": 2,
+    "e": "Chu vi đường tròn là $C = 2\\pi R = 2\\pi \\cdot 3 = 6\\pi$."
+  },
+  {
+    "q": "Câu 7. Nghiệm của hệ phương trình $\\begin{cases} 3x + y = 9 \\\\ 2x + y = 7 \\end{cases}$ là",
+    "a": ["$(2; 3)$.", "$(3; 2)$.", "$(-2; -3)$.", "$(-3; -2)$."],
+    "c": 0,
+    "e": "Trừ vế theo vế hai phương trình ta được $x = 2$. Thay $x = 2$ vào phương trình thứ hai ta có $2 \\cdot 2 + y = 7 \\Leftrightarrow y = 3$. Vậy nghiệm của hệ là $(2; 3)$."
+  },
+  {
+    "q": "Câu 8. Trong các hàm số sau, hàm số nào đồng biến trên $\\mathbb{R}$?",
+    "a": ["$y = -x + 1$.", "$y = -2x + 1$.", "$y = -\\sqrt{3}x + 2$.", "$y = x + 2$."],
+    "c": 3,
+    "e": "Hàm số bậc nhất $y = ax + b$ đồng biến trên $\\mathbb{R}$ khi $a > 0$. Hàm số $y = x + 2$ có $a = 1 > 0$ nên đồng biến trên $\\mathbb{R}$."
+  },
+  {
+    "q": "Câu 9. Một hình nón có bán kính đáy bằng $3\\text{ (cm)}$ và chiều cao bằng $2\\text{ (cm)}$. Thể tích hình nón này là",
+    "a": ["$12\\pi\\text{ (cm}^3\\text{)}$.", "$6\\pi\\text{ (cm}^3\\text{)}$.", "$2\\pi\\text{ (cm}^3\\text{)}$.", "$18\\pi\\text{ (cm}^3\\text{)}$."],
+    "c": 1,
+    "e": "Thể tích hình nón là $V = \\frac{1}{3}\\pi r^2 h = \\frac{1}{3}\\pi \\cdot 3^2 \\cdot 2 = 6\\pi\\text{ (cm}^3\\text{)}$."
+  },
+  {
+    "q": "Câu 10. Hai đường thẳng $d_1: y = x + 2$ và $d_2: y = ax + 3$ song song với nhau khi",
+    "a": ["$a \\neq 1$.", "$a = 1$.", "$a = -1$.", "$a \\neq -1$."],
+    "c": 1,
+    "e": "Hai đường thẳng song song với nhau khi và chỉ khi hệ số góc bằng nhau và tung độ gốc khác nhau, tức là $a = 1$ (do $2 \\neq 3$ đã thoả mãn)."
+  },
+  {
+    "q": "Câu 11. Biểu thức $\\sqrt{2x - 2}$ có nghĩa khi",
+    "a": ["$x \\geq 1$.", "$x \\leq 1$.", "$x \\leq -1$.", "$x \\geq -1$."],
+    "c": 0,
+    "e": "Biểu thức dưới dấu căn có nghĩa khi $2x - 2 \\geq 0 \\Leftrightarrow 2x \\geq 2 \\Leftrightarrow x \\geq 1$."
+  },
+  {
+    "q": "Câu 12. Nếu phương trình bậc hai $x^2 + bx + c = 0$ có hai nghiệm là $x = 2$ và $x = -3$ thì $b + c$ bằng",
+    "a": ["$-6$.", "$5$.", "$-5$.", "$3$."],
+    "c": 2,
+    "e": "Theo định lí Vi-ét, ta có $S = x_1 + x_2 = 2 + (-3) = -1 \\Rightarrow -b = -1 \\Rightarrow b = 1$ và $P = x_1 \\cdot x_2 = 2 \\cdot (-3) = -6 \\Rightarrow c = -6$. Khi đó $b + c = 1 + (-6) = -5$."
+  },
+  {
+    "q": "Câu 13. Cho tam giác $ABC$ vuông tại $A$. Gọi $H$ là chân đường cao đỉnh $A$ của tam giác $ABC$. Biết $BH = 2\\text{cm}, CH = 3\\text{cm}$, độ dài của đoạn $AH$ bằng bao nhiêu?",
+    "a": ["$\\sqrt{5}\\text{cm}$.", "$6\\text{cm}$.", "$1\\text{cm}$.", "$\\sqrt{6}\\text{cm}$."],
+    "c": 3,
+    "e": "Áp dụng hệ thức lượng trong tam giác vuông $ABC$ với đường cao $AH$, ta có $AH^2 = BH \\cdot CH = 2 \\cdot 3 = 6 \\Rightarrow AH = \\sqrt{6}\\text{ cm}$."
+  },
+  {
+    "q": "Câu 14. Tính diện tích xung quanh của hình trụ có đường kính đáy $8\\text{(cm)}$ và chiều cao $12\\text{(cm)}$.",
+    "a": ["$96\\pi\\text{ (cm}^2\\text{)}$.", "$128\\pi\\text{ (cm}^2\\text{)}$.", "$48\\pi\\text{ (cm}^2\\text{)}$.", "$192\\pi\\text{ (cm}^2\\text{)}$."],
+    "c": 0,
+    "e": "Chu vi đáy hình trụ là $C = \\pi d = 8\\pi$. Diện tích xung quanh của hình trụ là $S_{xq} = C \\cdot h = 8\\pi \\cdot 12 = 96\\pi\\text{ (cm}^2\\text{)}$."
+  },
+  {
+    "q": "Câu 15. Mặt cầu $(S)$ có độ dài đường kính bằng $d$. Diện tích của mặt cầu $(S)$ là",
+    "a": ["$4\\pi d^2$.", "$\\pi d^2$.", "$2\\pi d^2$.", "$\\frac{1}{4}\\pi d^2$."],
+    "c": 1,
+    "e": "Diện tích mặt cầu bán kính $R$ là $S = 4\\pi R^2$. Vì đường kính là $d$ nên bán kính $R = \\frac{d}{2}$. Suy ra $S = 4\\pi \\left(\\frac{d}{2}\\right)^2 = \\pi d^2$."
+  }
+]
+
+        },
+        {
+            title: "ĐỀ TS NĂM 2022-2023",
+            data: [
+  {
+    "q": "Câu 1: Tập nghiệm của phương trình $2x - 4 = 0$ là",
+    "a": ["$S = \\left\\{-\\frac{1}{2}\\right\\}$", "$S = \\{-2\\}$", "$S = \\left\\{\\frac{1}{2}\\right\\}$", "$S = \\{2\\}$"],
+    "c": 3,
+    "e": "Ta có $2x - 4 = 0 \\Leftrightarrow 2x = 4 \\Leftrightarrow x = 2$. Vậy tập nghiệm là $S = \\{2\\}$."
+  },
+  {
+    "q": "Câu 2: Biểu thức $\\sqrt{9} + \\sqrt{4}$ có giá trị bằng",
+    "a": ["$1$", "$6$", "$5$", "$\\sqrt{13}$"],
+    "c": 2,
+    "e": "Ta có $\\sqrt{9} + \\sqrt{4} = 3 + 2 = 5$."
+  },
+  {
+    "q": "Câu 3: Điểm nào dưới đây thuộc đồ thị hàm số $y = 2x^2$?",
+    "a": ["$N(1; 3)$", "$M(1; 1)$", "$P(1; 2)$", "$Q(1; 4)$"],
+    "c": 2,
+    "e": "Thay toạ độ các điểm vào hàm số $y = 2x^2$, ta thấy chỉ có điểm $P(1; 2)$ thoả mãn vì $2 = 2 \\cdot 1^2$."
+  },
+  {
+    "q": "Câu 4: Đường thẳng $y = 2x - 10$ song song với đường thẳng nào sau đây?",
+    "a": ["$y = 2x + 3$", "$y = \\frac{1}{2}x + 3$", "$y = -2x + 3$", "$y = -\\frac{1}{2}x + 3$"],
+    "c": 0,
+    "e": "Hai đường thẳng song song với nhau khi và chỉ khi hệ số góc của chúng bằng nhau ($a = a'$). Đường thẳng $y = 2x - 10$ có hệ số góc bằng $2$, nên nó song song với đường thẳng $y = 2x + 3$."
+  },
+  {
+    "q": "Câu 5: Hàm số nào dưới đây đồng biến trên $\\mathbb{R}$?",
+    "a": ["$y = 3x - 5$", "$y = -4x + 1$", "$y = -2x + 9$", "$y = -x + 7$"],
+    "c": 0,
+    "e": "Hàm số bậc nhất $y = ax + b$ đồng biến trên $\\mathbb{R}$ khi $a > 0$. Chỉ có hàm số $y = 3x - 5$ có $a = 3 > 0$."
+  },
+  {
+    "q": "Câu 6: Cho tứ giác $ABCD$ nội tiếp đường tròn $(O)$ có góc $\\widehat{ABC} = 50^\\circ$. Số đo của góc $\\widehat{ADC}$ bằng",
+    "a": ["$130^\\circ$", "$120^\\circ$", "$40^\\circ$", "$50^\\circ$"],
+    "c": 0,
+    "e": "Tứ giác nội tiếp có tổng hai góc đối bằng $180^\\circ$, do đó $\\widehat{ADC} = 180^\\circ - \\widehat{ABC} = 180^\\circ - 50^\\circ = 130^\\circ$."
+  },
+  {
+    "q": "Câu 7: Giá trị của hàm số $y = 3x - 1$ tại $x = 2$ là",
+    "a": ["$7$", "$1$", "$5$", "$3$"],
+    "c": 2,
+    "e": "Thay $x = 2$ vào hàm số, ta được $y = 3 \\cdot 2 - 1 = 5$."
+  },
+  {
+    "q": "Câu 8: Cho hình tròn $(C)$ có bán kính bằng $5$. Diện tích của hình tròn $(C)$ bằng",
+    "a": ["$10\\pi$", "$5\\pi$", "$\\frac{25}{4}\\pi$", "$25\\pi$"],
+    "c": 3,
+    "e": "Diện tích hình tròn bán kính $R = 5$ là $S = \\pi R^2 = \\pi \\cdot 5^2 = 25\\pi$."
+  },
+  {
+    "q": "Câu 9: Nghiệm của hệ phương trình $\\begin{cases} 3x + y = 7 \\\\ 2x - y = 3 \\end{cases}$ là",
+    "a": ["$(-1; -2)$", "$(2; 1)$", "$(-2; -1)$", "$(1; 2)$"],
+    "c": 1,
+    "e": "Cộng hai phương trình vế theo vế ta được $5x = 10 \\Leftrightarrow x = 2$. Thay vào phương trình đầu ta được $3 \\cdot 2 + y = 7 \\Leftrightarrow y = 1$. Vậy hệ có nghiệm $(2; 1)$."
+  },
+  {
+    "q": "Câu 10: Gọi $x_1, x_2$ là hai nghiệm của phương trình $x^2 - 5x + 4 = 0$. Giá trị của biểu thức $x_1 + x_2$ bằng",
+    "a": ["$-5$", "$-4$", "$4$", "$5$"],
+    "c": 3,
+    "e": "Theo định lí Vi-ét, tổng hai nghiệm của phương trình $ax^2 + bx + c = 0$ là $x_1 + x_2 = -\\frac{b}{a} = -\\frac{-5}{1} = 5$."
+  },
+  {
+    "q": "Câu 11: Điều kiện của $x$ để biểu thức $\\sqrt{x + 7}$ có nghĩa là",
+    "a": ["$x \\geq -7$", "$x \\leq -7$", "$x \\geq 7$", "$x \\leq 7$"],
+    "c": 0,
+    "e": "Biểu thức $\\sqrt{x + 7}$ có nghĩa khi và chỉ khi $x + 7 \\geq 0 \\Leftrightarrow x \\geq -7$."
+  },
+  {
+    "q": "Câu 12: Cho hình cầu $(S)$ có đường kính bằng $6$. Thể tích của hình cầu $(S)$ bằng",
+    "a": ["$288\\pi$", "$144\\pi$", "$\\frac{81}{4}\\pi$", "$36\\pi$"],
+    "c": 3,
+    "e": "Bán kính hình cầu là $R = \\frac{6}{2} = 3$. Thể tích hình cầu là $V = \\frac{4}{3}\\pi R^3 = \\frac{4}{3}\\pi \\cdot 3^3 = 36\\pi$."
+  },
+  {
+    "q": "Câu 13: Cho tam giác $ABC$ vuông cân tại $A$, biết cạnh $AB = 5$. Độ dài cạnh $BC$ bằng",
+    "a": ["$5\\sqrt{2}$", "$10$", "$5$", "$\\sqrt{10}$"],
+    "c": 0,
+    "e": "Tam giác $ABC$ vuông cân tại $A$ nên $AC = AB = 5$. Theo định lí Pytago, $BC = \\sqrt{AB^2 + AC^2} = \\sqrt{5^2 + 5^2} = \\sqrt{50} = 5\\sqrt{2}$."
+  },
+  {
+    "q": "Câu 14: Cho phương trình $x^2 - 2x + m - 1 = 0$ (với $m$ là tham số). Điều kiện của $m$ để phương trình đã cho có hai nghiệm phân biệt là",
+    "a": ["$m > -2$", "$m > 2$", "$m < 2$", "$m < -2$"],
+    "c": 2,
+    "e": "Phương trình có hai nghiệm phân biệt khi $\\Delta' = (-1)^2 - (m - 1) > 0 \\Leftrightarrow 1 - m + 1 > 0 \\Leftrightarrow 2 - m > 0 \\Leftrightarrow m < 2$."
+  },
+  {
+    "q": "Câu 15: Cho hình trụ $(T)$ có bán kính đáy bằng $3$ và chiều cao bằng $4$. Thể tích của hình trụ $(T)$ bằng",
+    "a": ["$24\\pi$", "$48\\pi$", "$12\\pi$", "$36\\pi$"],
+    "c": 3,
+    "e": "Thể tích hình trụ là $V = \\pi r^2 h = \\pi \\cdot 3^2 \\cdot 4 = 36\\pi$."
+  }
+]
+
+        },
+        {
+            title: "ĐỀ TS NĂM 2023-2024",
+            data: [
+  {
+    "q": "Câu 1: Xác định hệ số $a, b, c$ của phương trình bậc hai $x^2 - 6x - 2023 = 0$.",
+    "a": [
+      "$a = 0, b = -6, c = -2023$.",
+      "$a = 1, b = -6, c = -2023$.",
+      "$a = 1, b = 6, c = -2023$.",
+      "$a = 1, b = 6, c = 2023$."
+    ],
+    "c": 1,
+    "e": "Phương trình có dạng $ax^2 + bx + c = 0$, đối chiếu ta có $a=1, b=-6, c=-2023$."
+  },
+  {
+    "q": "Câu 2: Cho hình trụ có bán kính đáy bằng $R$, chiều cao là $h$. Thể tích $V$ của hình trụ đã cho được tính theo công thức",
+    "a": [
+      "$V = 2\\pi Rh$.",
+      "$V = \\pi R^2h$.",
+      "$V = \\frac{1}{3}\\pi R^2h$.",
+      "$V = \\frac{4}{3}\\pi R^3$."
+    ],
+    "c": 1,
+    "e": "Công thức tính thể tích hình trụ là $V = \\pi R^2h$."
+  },
+  {
+    "q": "Câu 3: Trong các phương trình sau, phương trình nào là phương trình bậc hai ẩn $x$?",
+    "a": [
+      "$2x - 4 = 0$.",
+      "$2x - 3y = 0$.",
+      "$2023 + 6x = 0$.",
+      "$x^2 - 16x + 3 = 0$."
+    ],
+    "c": 3,
+    "e": "Phương trình bậc hai một ẩn có dạng $ax^2 + bx + c = 0$ ($a \\neq 0$). Phương trình $x^2 - 16x + 3 = 0$ thỏa mãn."
+  },
+  {
+    "q": "Câu 4: Giá trị của $\\sqrt{2023}$ bằng",
+    "a": [
+      "$17\\sqrt{7}$.",
+      "$17$.",
+      "$44$.",
+      "$45$."
+    ],
+    "c": 0,
+    "e": "Ta có $\\sqrt{2023} = \\sqrt{289 \\cdot 7} = \\sqrt{17^2 \\cdot 7} = 17\\sqrt{7}$."
+  },
+  {
+    "q": "Câu 5: Hệ phương trình $\\begin{cases} 2x + y = 1 \\\\ 7x - y = 26 \\end{cases}$ có nghiệm là",
+    "a": [
+      "$(x; y) = (5; -3)$.",
+      "$(x; y) = (-3; 5)$.",
+      "$(x; y) = (3; -5)$.",
+      "$(x; y) = (-5; 3)$."
+    ],
+    "c": 2,
+    "e": "Cộng hai phương trình vế theo vế ta được $9x = 27 \\Leftrightarrow x = 3$. Thay vào phương trình đầu ta được $2(3) + y = 1 \\Leftrightarrow y = -5$. Nghiệm của hệ là $(3; -5)$."
+  },
+  {
+    "q": "Câu 6: Chu vi của đường tròn có bán kính $R$ được tính theo công thức $C = 2\\pi R$. Áp dụng tính chu vi của đường tròn $(T)$ có bán kính $R = 2\\text{ m}$.",
+    "a": [
+      "$2\\pi\\text{ (m)}$.",
+      "$4\\text{ (m)}$.",
+      "$2\\text{ (m)}$.",
+      "$4\\pi\\text{ (m)}$."
+    ],
+    "c": 3,
+    "e": "Thay $R=2$ vào công thức, chu vi là $C = 2\\pi(2) = 4\\pi\\text{ (m)}$."
+  },
+  {
+    "q": "Câu 7: Cho tam giác đều $ABC$ nội tiếp trong đường tròn $(O)$, $M$ là điểm thuộc $(O)$. Tính số đo của góc $\\widehat{AMB}$ (tham khảo hình vẽ)., <br><br><div style='text-align:center;'><img src='Hinh6_7.png' alt='Hình 1' style='max-width:350px; border-radius:8px;'></div>",
+    "a": [
+      "$\\widehat{AMB} = 60^\\circ$.",
+      "$\\widehat{AMB} = 30^\\circ$.",
+      "$\\widehat{AMB} = 75^\\circ$.",
+      "$\\widehat{AMB} = 45^\\circ$."
+    ],
+    "c": 0,
+    "e": "Tam giác $ABC$ đều nên $\\widehat{ACB} = 60^\\circ$. Góc $\\widehat{AMB}$ và $\\widehat{ACB}$ là hai góc nội tiếp cùng chắn cung $AB$, nên $\\widehat{AMB} = \\widehat{ACB} = 60^\\circ$."
+  },
+  {
+    "q": "Câu 8: Trong các hàm số sau, hàm số nào luôn đồng biến trên $\\mathbb{R}$?",
+    "a": [
+      "$y = -x + 16$.",
+      "$y = -16x + 6$.",
+      "$y = 6x - 2023$.",
+      "$y = 2023 - 6x$."
+    ],
+    "c": 2,
+    "e": "Hàm số $y = ax + b$ đồng biến trên $\\mathbb{R}$ khi $a > 0$. Hàm số $y = 6x - 2023$ có $a=6>0$ nên đồng biến."
+  },
+  {
+    "q": "Câu 9: Đồ thị của hàm số nào có dạng như hình vẽ?, <br><br><div style='text-align:center;'><img src='Hinh6_9.png' alt='Hình 2' style='max-width:350px; border-radius:8px;'></div>",
+    "a": [
+      "$y = 2$.",
+      "$y = x$.",
+      "$y = x^2$.",
+      "$y = 2x + 1$."
+    ],
+    "c": 2,
+    "e": "Đồ thị là một parabol đi qua gốc tọa độ và quay bề lõm lên trên, do đó nó là đồ thị của hàm số dạng $y = ax^2$ với $a > 0$. Trong các phương án, chỉ có $y = x^2$ phù hợp."
+  },
+  {
+    "q": "Câu 10: Điều kiện của $x$ để biểu thức $\\sqrt{x + 3}$ có nghĩa là",
+    "a": [
+      "$x > -3$.",
+      "$x \\neq -3$.",
+      "$x \\le -3$.",
+      "$x \\ge -3$."
+    ],
+    "c": 3,
+    "e": "Biểu thức dưới dấu căn phải không âm, tức là $x + 3 \\ge 0 \\Leftrightarrow x \\ge -3$."
+  },
+  {
+    "q": "Câu 11: Trong World Cup 2022 được tổ chức tại Qatar, quả bóng được sử dụng cho các trận đấu có dạng hình cầu và có đường kính bằng $22\\text{ cm}$. Tính diện tích bề mặt của quả bóng. [Hinh_3]",
+    "a": [
+      "$121\\pi\\text{ (cm}^2\\text{)}$.",
+      "$576\\pi\\text{ (cm}^2\\text{)}$.",
+      "$1936\\pi\\text{ (cm}^2\\text{)}$.",
+      "$484\\pi\\text{ (cm}^2\\text{)}$."
+    ],
+    "c": 3,
+    "e": "Bán kính quả bóng là $R = 22 / 2 = 11\\text{ cm}$. Diện tích bề mặt hình cầu là $S = 4\\pi R^2 = 4\\pi (11)^2 = 484\\pi\\text{ (cm}^2\\text{)}$."
+  },
+  {
+    "q": "Câu 12: Đường thẳng $y = 3x - 2$ song song với đường thẳng nào sau đây?",
+    "a": [
+      "$y = 3x + 15$.",
+      "$y = -3x + 2$.",
+      "$-y = -\\frac{1}{3}x + 7$.",
+      "$y = 2x - 3$."
+    ],
+    "c": 0,
+    "e": "Hai đường thẳng song song có cùng hệ số góc. Đường thẳng $y = 3x - 2$ có hệ số góc là $3$. Trong các đáp án, đường thẳng $y = 3x + 15$ có hệ số góc là $3$ và tung độ gốc $15 \\neq -2$."
+  },
+  {
+    "q": "Câu 13: Giá trị của hàm số $y = 4x^2$ tại $x = -1$ bằng",
+    "a": [
+      "$1$.",
+      "$4$.",
+      "$-1$.",
+      "$-4$."
+    ],
+    "c": 1,
+    "e": "Thay $x = -1$ vào hàm số, ta được $y = 4(-1)^2 = 4(1) = 4$."
+  },
+  {
+    "q": "Câu 14: Biết phương trình bậc hai $x^2 - 2023x + 2024 = 0$ có hai nghiệm phân biệt $x_1, x_2$. Khi đó giá trị của tích $x_1x_2$ bằng",
+    "a": [
+      "$2023$.",
+      "$-2024$.",
+      "$-2023$.",
+      "$2024$."
+    ],
+    "c": 3,
+    "e": "Theo định lí Vi-ét, tích hai nghiệm của phương trình $ax^2 + bx + c = 0$ là $x_1x_2 = \\frac{c}{a} = \\frac{2024}{1} = 2024$."
+  },
+  {
+    "q": "Câu 15: Cho tam giác $ABC$ vuông tại $A$, biết $AB = 4, AC = 6$, đường cao $AD = x$ (tham khảo hình vẽ). Hãy chọn công thức đúng?, <br><br><div style='text-align:center;'><img src='Hinh6_15.png' alt='Hình 3' style='max-width:350px; border-radius:8px;'></div>",
+    "a": [
+      "$x^2 = 4^2 + 6^2$.",
+      "$x^2 = 6^2 - 4^2$.",
+      "$\\frac{1}{x^2} = \\frac{1}{4^2} - \\frac{1}{6^2}$.",
+      "$\\frac{1}{x^2} = \\frac{1}{4^2} + \\frac{1}{6^2}$."
+    ],
+    "c": 3,
+    "e": "Theo hệ thức lượng trong tam giác vuông, nghịch đảo bình phương đường cao bằng tổng nghịch đảo bình phương hai cạnh góc vuông: $\\frac{1}{AD^2} = \\frac{1}{AB^2} + \\frac{1}{AC^2}$, tức là $\\frac{1}{x^2} = \\frac{1}{4^2} + \\frac{1}{6^2}$."
+  }
+]
+
+        },
+        {
+            title: "ĐỀ TS NĂM 2024-2025",
+            data: [
+  {
+    "q": "Câu 1: Số nghiệm của phương trình $x^2 - x - 6 = 0$ là",
+    "a": ["$3$.", "$1$.", "$0$.", "$2$."],
+    "c": 3,
+    "e": "Phương trình $x^2 - x - 6 = 0$ có $\\Delta = (-1)^2 - 4 \\cdot 1 \\cdot (-6) = 25 > 0$ nên phương trình có $2$ nghiệm phân biệt."
+  },
+  {
+    "q": "Câu 2: Đường thẳng $y = 2x + 1$ song song với đường thẳng nào sau đây?",
+    "a": ["$y = -2x + 1$.", "$y = -2x - 1$.", "$y = -2x + 3$.", "$y = 2x + 3$."],
+    "c": 3,
+    "e": "Hai đường thẳng $y = ax + b$ và $y = a'x + b'$ song song với nhau khi $a = a'$ và $b \\neq b'$. Đường thẳng $y = 2x + 3$ có $a=2$ và $b=3 \\neq 1$ nên song song với đường thẳng $y = 2x + 1$."
+  },
+  {
+    "q": "Câu 3: Quan sát hình vẽ bên dưới, biết góc nội tiếp $\\widehat{PNQ} = 60^\\circ$. Số đo cung $\\stackrel{\\frown}{PmQ}$ bằng , <br><br><div style='text-align:center;'><img src='Hinh7_3.png' alt='Hình 1' style='max-width:350px; border-radius:8px;'></div>",
+    "a": ["$30^\\circ$.", "$120^\\circ$.", "$60^\\circ$.", "$90^\\circ$."],
+    "c": 1,
+    "e": "Góc nội tiếp bằng nửa số đo cung bị chắn. Vậy số đo cung $\\stackrel{\\frown}{PmQ} = 2 \\cdot \\widehat{PNQ} = 2 \\cdot 60^\\circ = 120^\\circ$."
+  },
+  {
+    "q": "Câu 4: Cho hai đường tròn $(O; 2\\text{cm})$ và $(O'; 3\\text{cm})$ tiếp xúc trong với nhau. Độ dài đoạn $OO'$ bằng",
+    "a": ["$3\\text{ cm}$.", "$1\\text{ cm}$.", "$2\\text{ cm}$.", "$5\\text{ cm}$."],
+    "c": 1,
+    "e": "Khi hai đường tròn tiếp xúc trong, khoảng cách giữa hai tâm $OO' = R - r = 3 - 2 = 1\\text{ cm}$."
+  },
+  {
+    "q": "Câu 5: Cho $\\Delta ABC$ vuông tại $B$ (tham khảo hình vẽ). Chọn khẳng định đúng?, <br><br><div style='text-align:center;'><img src='Hinh7_5.png' alt='Hình 2' style='max-width:350px; border-radius:8px;'></div>",
+    "a": ["$\\sin C = \\frac{AB}{BC}$.", "$\\sin C = \\frac{AB}{AC}$.", "$\\sin C = \\frac{BC}{AB}$.", "$\\sin C = \\frac{BC}{AC}$."],
+    "c": 1,
+    "e": "Trong tam giác vuông, $\\sin = \\frac{\\text{đối}}{\\text{huyền}}$. Đối với góc $C$, cạnh đối là $AB$ và cạnh huyền là $AC$. Vậy $\\sin C = \\frac{AB}{AC}$."
+  },
+  {
+    "q": "Câu 6: Hệ phương trình nào dưới đây là hệ phương trình bậc nhất hai ẩn?",
+    "a": ["$\\begin{cases} x^2 - 3y = 1 \\\\ x + y = -2 \\end{cases}$.", "$\\begin{cases} x + y = 6 \\\\ xy = 5 \\end{cases}$.", "$\\begin{cases} 2x - 3y = 1 \\\\ x + y - z = -2 \\end{cases}$.", "$\\begin{cases} 2x - 3y = 1 \\\\ x + y = -2 \\end{cases}$."],
+    "c": 3,
+    "e": "Hệ phương trình bậc nhất hai ẩn có dạng $\\begin{cases} ax + by = c \\\\ a'x + b'y = c' \\end{cases}$. Chỉ có hệ D thỏa mãn."
+  },
+  {
+    "q": "Câu 7: Điều kiện của $x$ để biểu thức $\\sqrt{x - 2}$ có nghĩa là",
+    "a": ["$x \\leq -2$.", "$x \\geq -2$.", "$x \\geq 2$.", "$x \\leq 2$."],
+    "c": 2,
+    "e": "Biểu thức dưới dấu căn bậc hai có nghĩa khi nó không âm, tức là $x - 2 \\geq 0 \\Leftrightarrow x \\geq 2$."
+  },
+  {
+    "q": "Câu 8: Cho đường thẳng $(d): y = ax + 3$ đi qua điểm $M(2; -1)$. Hệ số góc của đường thẳng $(d)$ bằng",
+    "a": ["$-2$.", "$2$.", "$1$.", "$-1$."],
+    "c": 0,
+    "e": "Thay tọa độ điểm $M(2; -1)$ vào phương trình đường thẳng, ta có $-1 = a(2) + 3 \\Leftrightarrow 2a = -4 \\Leftrightarrow a = -2$. Hệ số góc là $a = -2$."
+  },
+  {
+    "q": "Câu 9: Phương trình $x^2 - 4x + 3 = 0$ có các nghiệm là",
+    "a": ["$x_1 = -1$ và $x_2 = -3$.", "$x_1 = 1$ và $x_2 = -3$.", "$x_1 = 1$ và $x_2 = 3$.", "$x_1 = -1$ và $x_2 = 3$."],
+    "c": 2,
+    "e": "Phương trình có dạng $a + b + c = 1 - 4 + 3 = 0$ nên có hai nghiệm là $x_1 = 1$ và $x_2 = \\frac{c}{a} = 3$."
+  },
+  {
+    "q": "Câu 10: Cho hình nón có chiều cao $h = 3\\text{ cm}$ và bán kính đáy $r = 2\\text{ cm}$. Thể tích của hình nón đã cho bằng",
+    "a": ["$6\\pi\\text{ cm}^3$.", "$18\\pi\\text{ cm}^3$.", "$4\\pi\\text{ cm}^3$.", "$12\\pi\\text{ cm}^3$."],
+    "c": 2,
+    "e": "Thể tích hình nón là $V = \\frac{1}{3}\\pi r^2 h = \\frac{1}{3} \\pi \\cdot 2^2 \\cdot 3 = 4\\pi\\text{ cm}^3$."
+  },
+  {
+    "q": "Câu 11: Căn bậc hai số học của $4$ bằng",
+    "a": ["$2$.", "$8$.", "$16$.", "$4$."],
+    "c": 0,
+    "e": "Căn bậc hai số học của một số dương $a$ là số dương $x$ sao cho $x^2 = a$. Vì $2^2 = 4$ và $2 > 0$ nên căn bậc hai số học của $4$ là $2$."
+  },
+  {
+    "q": "Câu 12: Giá trị của hàm số $y = -\\frac{1}{2}x^2$ tại $x = 2$ là",
+    "a": ["$-2$.", "$4$.", "$-4$.", "$2$."],
+    "c": 0,
+    "e": "Thay $x = 2$ vào hàm số, ta được $y = -\\frac{1}{2}(2)^2 = -\\frac{1}{2} \\cdot 4 = -2$."
+  },
+  {
+    "q": "Câu 13: Cho mặt cầu có bán kính bằng $2\\text{ dm}$. Diện tích mặt cầu đã cho bằng",
+    "a": ["$\\frac{4\\pi}{3}\\text{ dm}^2$.", "$\\frac{16}{3}\\pi\\text{ dm}^2$.", "$4\\pi\\text{ dm}^2$.", "$16\\pi\\text{ dm}^2$."],
+    "c": 3,
+    "e": "Diện tích mặt cầu là $S = 4\\pi R^2 = 4\\pi (2)^2 = 16\\pi\\text{ dm}^2$."
+  },
+  {
+    "q": "Câu 14: Diện tích xung quanh của hình trụ có bán kính đáy $r$ và chiều cao $h$ bằng",
+    "a": ["$\\frac{4}{3}\\pi rh$.", "$2\\pi rh$.", "$\\pi rh$.", "$4\\pi rh$."],
+    "c": 1,
+    "e": "Công thức tính diện tích xung quanh của hình trụ là $S_{xq} = 2\\pi rh$."
+  },
+  {
+    "q": "Câu 15: Cho hàm số $y = 3x^2$ có đồ thị như hình bên dưới. Chọn khẳng định đúng?, <br><br><div style='text-align:center;'><img src='Hinh7_15.png' alt='Hình 3' style='max-width:350px; border-radius:8px;'></div>",
+    "a": ["Hàm số $y = 3x^2$ nghịch biến khi $x > 0$.", "Hàm số $y = 3x^2$ nghịch biến khi $x < 3$.", "Hàm số $y = 3x^2$ đồng biến khi $x > 0$.", "Hàm số $y = 3x^2$ đồng biến khi $x \\in \\mathbb{R}$."],
+    "c": 2,
+    "e": "Hàm số $y = ax^2$ với $a > 0$ nghịch biến khi $x < 0$ và đồng biến khi $x > 0$. Dựa vào đồ thị, phần bên phải trục tung ($x > 0$) đồ thị đi lên nên hàm số đồng biến."
+  }
+]
+
+},
+        {
+            title: "ĐỀ TS NĂM 2025-2026",
+            data: [
+  {
+    "q": "Câu 1. Cho tam giác đều nội tiếp đường tròn $(O)$, có cạnh là $6\\ cm$. Bán kính của đường tròn $(O)$ là",
+    "a": ["$\\sqrt{3}\\ cm$.", "$3\\sqrt{3}\\ cm$.", "$\\frac{3\\sqrt{3}}{2}\\ cm$.", "$2\\sqrt{3}\\ cm$."],
+    "c": 3,
+    "e": "Bán kính đường tròn ngoại tiếp tam giác đều cạnh $a$ là $R = \\frac{a\\sqrt{3}}{3}$. Với $a=6$, ta có $R = \\frac{6\\sqrt{3}}{3} = 2\\sqrt{3}\\ (cm)$."
+  },
+  {
+    "q": "Câu 2. Hình tròn có bán kính là $12$ và số đo cung $AmB$ là $45^\\circ$ như hình bên dưới, khi đó độ dài của cung $AmB$ là, <br><br><div style='text-align:center;'><img src='Hinh8_2.png' alt='Hình 1' style='max-width:350px; border-radius:8px;'></div>",
+    "a": ["$\\frac{1}{4}\\pi$.", "$6\\pi$.", "$\\frac{3}{2}\\pi$.", "$3\\pi$."],
+    "c": 3,
+    "e": "Độ dài cung tròn là $l = \\frac{\\pi R n}{180} = \\frac{\\pi \\cdot 12 \\cdot 45}{180} = 3\\pi$."
+  },
+  {
+    "q": "Câu 3. Cho mẫu số liệu ghép nhóm về thống kê nhiệt độ tại một địa điểm của tỉnh X, ta có bảng số liệu sau:<br><table class='summary-table' style='margin-bottom: 15px;'><tr><th>Nhiệt độ ($^\\circ\\mathrm{C}$)</th><th>$[18;21)$</th><th>$[21;24)$</th><th>$[24;27)$</th><th>$[27;30)$</th></tr><tr><td>Số ngày</td><td>6</td><td>12</td><td>9</td><td>3</td></tr></table>Tính xác suất để nhiệt độ địa điểm đó nhỏ hơn $24^\\circ\\mathrm{C}$?",
+    "a": ["$\\frac{2}{5}$.", "$\\frac{3}{10}$.", "$\\frac{3}{5}$.", "$\\frac{1}{5}$."],
+    "c": 2,
+    "e": "Tổng số ngày là $6+12+9+3=30$. Số ngày có nhiệt độ nhỏ hơn $24^\\circ\\mathrm{C}$ là $6+12=18$. Xác suất là $\\frac{18}{30} = \\frac{3}{5}$."
+  },
+  {
+    "q": "Câu 4. Cho đường tròn $(O)$ và các điểm $A,B,C$ trên $(O)$ như hình vẽ sau. \\nTính số đo của góc nội tiếp $\\widehat{BAC}., <br><br><div style='text-align:center;'><img src='Hinh8_4.png' alt='Hình 2' style='max-width:350px; border-radius:8px;'></div>",
+    "a": ["$90^\\circ$.", "$30^\\circ$.", "$60^\\circ$.", "$120^\\circ$."],
+    "c": 2,
+    "e": "Góc nội tiếp $\\widehat{BAC}$ bằng nửa số đo góc ở tâm $\\widehat{BOC}$ cùng chắn cung $BC$. Vậy $\\widehat{BAC} = \\frac{1}{2} \\cdot 120^\\circ = 60^\\circ$."
+  },
+  {
+    "q": "Câu 5. Tứ giác $ABCD$ nội tiếp đường tròn, nếu biết số đo của góc $B$ bằng $100^\\circ$ thì khi đó số đo của góc $D$ sẽ là",
+    "a": ["$100^\\circ$.", "$90^\\circ$.", "$80^\\circ$.", "$50^\\circ$."],
+    "c": 2,
+    "e": "Trong tứ giác nội tiếp, tổng hai góc đối bằng $180^\\circ$. Do đó $\\widehat{D} = 180^\\circ - \\widehat{B} = 180^\\circ - 100^\\circ = 80^\\circ$."
+  },
+  {
+    "q": "Câu 6. Kết quả đúng của $\\sqrt{4}\\cdot\\sqrt{25}$ là",
+    "a": ["$10$.", "$100$.", "$4$.", "$25$."],
+    "c": 0,
+    "e": "Ta có $\\sqrt{4}\\cdot\\sqrt{25} = 2 \\cdot 5 = 10$."
+  },
+  {
+    "q": "Câu 7. Nghiệm của bất phương trình $2x - 4 > 0$ là",
+    "a": ["$x > 2$.", "$x \\geq 2$.", "$x < 2$.", "$x \\leq 2$."],
+    "c": 0,
+    "e": "Ta có $2x - 4 > 0 \\Leftrightarrow 2x > 4 \\Leftrightarrow x > 2$."
+  },
+  {
+    "q": "Câu 8. Nghiệm của hệ phương trình $\\begin{cases} 2x - 3y = -5 \\\\ 4x + 3y = 17 \\end{cases}$ là",
+    "a": ["$(-2; 3)$.", "$(2; -3)$.", "$(2; 3)$.", "$(-2; -3)$."],
+    "c": 2,
+    "e": "Cộng hai phương trình ta được $6x = 12 \\Leftrightarrow x = 2$. Thay vào phương trình đầu ta có $2(2) - 3y = -5 \\Leftrightarrow 3y = 9 \\Leftrightarrow y = 3$. Hệ có nghiệm $(2; 3)$."
+  },
+  {
+    "q": "Câu 9. Chiều cao của cây ở hình bên dưới là <br><br><div style='text-align:center;'><img src='Hinh8_9.png' alt='Hình 3' style='max-width:350px; border-radius:8px;'></div>",
+    "a": ["$15\\ m$.", "$30\\sqrt{3}\\ m$.", "$15\\sqrt{3}\\ m$.", "$10\\sqrt{3}\\ m$."],
+    "c": 3,
+    "e": "Áp dụng tỉ số lượng giác trong tam giác vuông: chiều cao cây $h = 30 \\cdot \\tan(30^\\circ) = 30 \\cdot \\frac{\\sqrt{3}}{3} = 10\\sqrt{3}\\ m$."
+  },
+  {
+    "q": "Câu 10. Phương trình $x^2 - 6x + 5 = 0$ có tích của hai nghiệm là",
+    "a": ["$1$.", "$-6$.", "$5$.", "$6$."],
+    "c": 2,
+    "e": "Theo hệ thức Vi-ét, tích hai nghiệm của phương trình $ax^2+bx+c=0$ là $\\frac{c}{a}$. Vậy tích hai nghiệm là $\\frac{5}{1} = 5$."
+  },
+  {
+    "q": "Câu 11. Giá trị lượng giác $\\sin 55^\\circ$ bằng giá trị lượng giác",
+    "a": ["$\\sin 35^\\circ$.", "$\\cos 35^\\circ$.", "$\\tan 35^\\circ$.", "$\\cot 35^\\circ$."],
+    "c": 1,
+    "e": "Hai góc $55^\\circ$ và $35^\\circ$ là hai góc phụ nhau nên $\\sin 55^\\circ = \\cos 35^\\circ$."
+  },
+  {
+    "q": "Câu 12. Xác suất xuất hiện mặt chẵn khi gieo một con xúc xắc cân đối và đồng chất là",
+    "a": ["$\\frac{1}{6}$.", "$\\frac{1}{2}$.", "$1$.", "$\\frac{1}{3}$."],
+    "c": 1,
+    "e": "Không gian mẫu có $6$ phần tử. Biến cố xuất hiện mặt chẵn có $3$ kết quả thuận lợi ($2, 4, 6$). Xác suất là $\\frac{3}{6} = \\frac{1}{2}$."
+  },
+  {
+    "q": "Câu 13. Một hình cầu có đường kính $10\\ cm$ thì diện tích của mặt cầu đó là",
+    "a": ["$100\\pi\\ cm^2$.", "$400\\pi\\ cm^2$.", "$400\\ cm^2$.", "$100\\ cm^2$."],
+    "c": 0,
+    "e": "Bán kính $R = 5\\ cm$. Diện tích mặt cầu là $S = 4\\pi R^2 = 4\\pi \\cdot 5^2 = 100\\pi\\ cm^2$."
+  },
+  {
+    "q": "Câu 14. Xét phép thử: “gieo lần lượt 2 đồng xu cân đối và đồng chất”. Số phần tử của không gian mẫu là",
+    "a": ["$2$.", "$3$.", "$4$.", "$1$."],
+    "c": 2,
+    "e": "Mỗi lần gieo có $2$ khả năng (Sấp, Ngửa). Gieo 2 lần liên tiếp thì số phần tử của không gian mẫu là $2 \\times 2 = 4$."
+  },
+  {
+    "q": "Câu 15. Biểu đồ bên dưới biểu diễn cỡ giày của học sinh nam khối 9 ở trường X. \\nXác định cỡ giày mà học sinh nam sử dụng ít nhất?, <br><br><div style='text-align:center;'><img src='Hinh8_15.png' alt='Hình 4' style='max-width:350px; border-radius:8px;'></div>",
+    "a": ["$37$.", "$39$.", "$40$.", "$38$."],
+    "c": 1,
+    "e": "Từ biểu đồ, cột tương ứng với cỡ giày 39 là thấp nhất (có 10 học sinh), nên cỡ giày 39 được sử dụng ít nhất."
+  }
+]
+
+      }]
+
+    // --- LOGIC TRẠNG THÁI ---
+    let appState = { sN: "", sC: "", scores: {}, completed: [] };
+    let currentChapterIdx = -1;
+    let curr = 0; let rawScore = 0; let retries = 0; let isSubmitting = false;
+    let currentDB = [];
+    let timerInterval; let timeLeft = 3600; 
+
+    // Tải dữ liệu từ LocalStorage khi khởi động
+    function initApp() {
+        let saved = localStorage.getItem('mathQuizState');
+        if(saved) {
+            appState = JSON.parse(saved);
+            document.getElementById('name-in').value = appState.sN;
+            document.getElementById('class-in').value = appState.sC;
+        }
+    }
+    initApp();
+
+    function saveState() {
+        localStorage.setItem('mathQuizState', JSON.stringify(appState));
+    }
+
+    function login() {
+        let n = document.getElementById('name-in').value.trim();
+        let c = document.getElementById('class-in').value.trim();
+        if(!n || !c) return alert("Em nhập đủ thông tin Họ tên và Lớp nhé!");
+        appState.sN = n; appState.sC = c;
+        saveState();
+        showChapterList();
+    }
+
+    function showChapterList() {
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.remove('active');
+        document.getElementById('final-summary-screen').classList.remove('active');
+        document.getElementById('chapter-screen').classList.add('active');
+        document.getElementById('disp-name').innerText = `${appState.sN} - Lớp ${appState.sC}`;
+
+        const listDiv = document.getElementById('chapter-list');
+        listDiv.innerHTML = "";
+        
+        let allDone = true;
+
+        CHAPTERS.forEach((ch, idx) => {
+            let btn = document.createElement('button');
+            let isDone = appState.completed.includes(idx);
+            if(!isDone) allDone = false;
+            
+            btn.className = `btn-chapter ${isDone ? 'done' : ''}`;
+            btn.innerHTML = `${ch.title}<br><span style="font-size:0.9rem; font-weight:normal;">${isDone ? 'Đã hoàn thành' : 'Bấm để làm bài'}</span>`;
+            
+            if(!isDone) {
+                btn.onclick = () => startChapter(idx);
+            }
+            listDiv.appendChild(btn);
+        });
+
+        if(allDone) {
+            document.getElementById('btn-final-summary').style.display = 'block';
+        }
+    }
+
+    function startChapter(idx) {
+        currentChapterIdx = idx;
+        currentDB = CHAPTERS[idx].data;
+        curr = 0; rawScore = 0; retries = 0;
+        
+        const m = document.getElementById('bg-music');
+        m.play().catch(() => console.log("Chặn phát nhạc"));
+        document.getElementById('music-btn').innerText = "🔇";
+
+        document.getElementById('quiz-chapter-title').innerText = `Đề số ${idx + 1}`;
+        document.getElementById('q-total').innerText = currentDB.length;
+        
+        document.getElementById('chapter-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        
+        startTimer();
+        render();
+    }
+
+    // --- LOGIC LÀM BÀI ---
+    function startTimer() {
+        timeLeft = 3600;
+        document.getElementById('timer').classList.remove('timer-warning');
+        document.getElementById('timer').style.background = "#2e7d32";
+        
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            let m = Math.floor(timeLeft / 60); let s = timeLeft % 60;
+            document.getElementById('timer').innerText = `⏱ ${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+            
+            if(timeLeft <= 300) document.getElementById('timer').classList.add('timer-warning');
+            if(timeLeft <= 0) {
+                clearInterval(timerInterval);
+                document.getElementById('timer').innerText = "⏱ 00:00";
+                alert("Đã hết thời gian làm bài! Hệ thống tự động thu bài.");
+                end();
+            }
+        }, 1000);
+    }
+
+    function toggleMusic() {
+        const m = document.getElementById('bg-music'); const b = document.getElementById('music-btn');
+        if (m.paused) { m.play(); b.innerText = "🔇"; } else { m.pause(); b.innerText = "🎵"; }
+    }
+
+    function render() {
+        const item = currentDB[curr];
+        document.getElementById('q-idx').innerText = curr + 1;
+        document.getElementById('explain-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('q-txt').innerHTML = item.q;
+        
+        const box = document.getElementById('options-box'); box.innerHTML = "";
+        
+        if (item.isTF) {
+            let table = `<table><tr><th>Phát biểu</th><th>Đúng</th><th>Sai</th></tr>`;
+            item.sub.forEach((txt, i) => {
+                table += `<tr><td class="align-left">${txt}</td><td class="tf-cell" onclick="checkTF(${i}, true, this)">Đ</td><td class="tf-cell" onclick="checkTF(${i}, false, this)">S</td></tr>`;
+            });
+            box.innerHTML = table + `</table>`;
+        } else if (item.isSA) {
+            box.innerHTML = `
+                <div style="margin-top:20px;">
+                    <input type="text" id="sa-input" placeholder="Nhập đáp án của em..." style="width: 100%; color: black; font-weight: bold; text-align: center;">
+                    <button class="btn-action" style="margin-top: 15px;" id="btn-submit-sa" onclick="checkSA(this)">KIỂM TRA ĐÁP ÁN</button>
+                </div>
+            `;
+        } else {
+            const labels = ['A','B','C','D'];
+            item.a.forEach((txt, i) => {
+                const d = document.createElement('div'); d.className = 'option';
+                d.innerHTML = `<strong>${labels[i]}.</strong> ${txt}`; d.onclick = () => checkMC(i, d); box.appendChild(d);
+            });
+        }
+        MathJax.typesetPromise();
+    }
+
+    function checkMC(idx, el) {
+        const item = currentDB[curr]; const all = document.querySelectorAll('.option');
+        all.forEach(o => o.style.pointerEvents = 'none'); 
+        
+        if(idx === item.c) { el.classList.add('correct'); document.getElementById('snd-correct').play(); rawScore += 1; } 
+        else {
+            el.classList.add('wrong'); all[item.c].classList.add('correct'); document.getElementById('snd-wrong').play();
+            const exp = document.getElementById('explain-box'); exp.innerHTML = `<strong>Giải thích:</strong> ${item.e}`; exp.style.display = 'block'; MathJax.typesetPromise();
+        }
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function checkTF(row, choice, el) {
+        const item = currentDB[curr]; const tr = el.parentElement;
+        if(tr.dataset.done) return; tr.dataset.done = "true";
+        const isCorrect = (choice === item.ans[row]);
+        el.style.background = isCorrect ? "#2e7d32" : "#c62828"; el.style.color = "#fff";
+        
+        if(isCorrect) { rawScore += 1; document.getElementById('snd-correct').play(); } 
+        else { document.getElementById('snd-wrong').play(); }
+        
+        if(document.querySelectorAll('[data-done]').length === item.sub.length) {
+            const exp = document.getElementById('explain-box'); exp.innerHTML = `<strong>Giải thích:</strong><br>${item.e}`; exp.style.display = 'block'; MathJax.typesetPromise();
+            document.getElementById('next-btn').style.display = "block";
+        }
+    }
+
+    function checkSA(btn) {
+        const item = currentDB[curr]; const inp = document.getElementById('sa-input');
+        const val = inp.value.trim().toLowerCase().replace(/\s/g, '').replace('.', ',');
+        const correctAns = item.ans.toLowerCase().replace(/\s/g, '');
+        
+        if(val === "") return alert("Em hãy nhập đáp án trước khi kiểm tra nhé!");
+        inp.disabled = true; btn.style.display = 'none';
+        
+        if(val === correctAns) { inp.style.background = "#a5d6a7"; document.getElementById('snd-correct').play(); rawScore += 1; } 
+        else {
+            inp.style.background = "#ef9a9a"; document.getElementById('snd-wrong').play();
+            const exp = document.getElementById('explain-box'); exp.innerHTML = `<strong>Đáp án đúng:</strong> ${item.ans}<br><strong>Giải thích:</strong> ${item.e}`; exp.style.display = 'block'; MathJax.typesetPromise();
+        }
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function goNext() {
+        curr++;
+        if(curr < currentDB.length) render(); else end();
+    }
+
+    function end() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-screen').classList.remove('active');
+        
+        // Lưu tiến trình chương hiện tại
+        let maxQ = currentDB.length;
+        let finalScoreScale10 = Math.round((rawScore / maxQ) * 10 * 10) / 10;
+        
+        appState.scores[currentChapterIdx] = { raw: rawScore, max: maxQ, scale10: finalScoreScale10 };
+        if(!appState.completed.includes(currentChapterIdx)) appState.completed.push(currentChapterIdx);
+        saveState();
+
+        document.getElementById('final-score').innerText = `${finalScoreScale10} / 10 Điểm`;
+        document.getElementById('detail-score').innerText = `(Đạt ${rawScore}/${maxQ} ý đúng)`;
+        document.getElementById('result-screen').classList.add('active');
+    }
+
+    function backToChapters() {
+        showChapterList();
+    }
+
+    // --- TỔNG KẾT ---
+    function showFinalSummary() {
+        document.getElementById('chapter-screen').classList.remove('active');
+        document.getElementById('final-summary-screen').classList.add('active');
+
+        let table = document.getElementById('summary-table-content');
+        table.innerHTML = "<tr><th>Chương</th><th>Số ý đúng</th><th>Điểm (Hệ 10)</th></tr>";
+
+        let totalScale10 = 0;
+        
+        for(let i = 0; i < CHAPTERS.length; i++) {
+            let row = document.createElement('tr');
+            let data = appState.scores[i];
+            if(data) {
+                row.innerHTML = `<td>Chương ${i+1}</td><td>${data.raw} / ${data.max}</td><td style="color:var(--gold); font-weight:bold;">${data.scale10}</td>`;
+                totalScale10 += data.scale10;
+            } else {
+                row.innerHTML = `<td>Chương ${i+1}</td><td colspan="2">Chưa làm</td>`;
+            }
+            table.appendChild(row);
+        }
+        
+        let avg = Math.round((totalScale10 / 10) * 10) / 10;
+        document.getElementById('avg-score').innerText = avg;
+    }
+
+    function sendPoints() {
+        if (isSubmitting) return; 
+        const btnSubmit = document.getElementById('btn-submit-score');
+        isSubmitting = true; 
+        btnSubmit.innerText = "ĐANG NỘP BÀI... VUI LÒNG CHỜ";
+        btnSubmit.style.opacity = "0.7"; btnSubmit.disabled = true; 
+
+        if(SCRIPT_URL.includes("DÁN_LINK")) {
+            setTimeout(() => {
+                btnSubmit.innerText = "ĐÃ NỘP BÀI THÀNH CÔNG";
+                btnSubmit.style.background = "#4caf50"; btnSubmit.style.color = "white";
+            }, 1000);
+            return;
+        }
+        
+        let avg = document.getElementById('avg-score').innerText;
+        fetch(SCRIPT_URL, { 
+            method: 'POST', mode: 'no-cors', 
+            body: JSON.stringify({ s: "TongKet10Chuong_Toan9", n: appState.sN, c: appState.sC, d: avg, r: 0 }) 
+        })
+        .then(() => {
+            btnSubmit.innerText = "ĐÃ NỘP BÀI THÀNH CÔNG";
+            btnSubmit.style.background = "#4caf50"; btnSubmit.style.color = "white";
+        })
+        .catch(() => {
+            alert("Có lỗi kết nối mạng. Em vui lòng bấm nộp lại nhé!");
+            isSubmitting = false; btnSubmit.innerText = "NỘP LẠI BÀI";
+            btnSubmit.style.opacity = "1"; btnSubmit.disabled = false;
+        });
+    }
+
+    function resetProgress() {
+        if(confirm("Thầy/Cô lưu ý: Việc này sẽ xóa toàn bộ quá trình ôn tập hiện tại của học sinh này trên máy. Bắt đầu lại từ đầu?")) {
+            localStorage.removeItem('mathQuizState');
+            appState = { sN: "", sC: "", scores: {}, completed: [] };
+            document.getElementById('name-in').value = "";
+            document.getElementById('class-in').value = "";
+            alert("Đã xóa dữ liệu. Hãy nhập thông tin mới.");
+        }
+    }
+
+    // --- ANTI CHEAT ---
+    document.addEventListener("visibilitychange", function() {
+        const quizScreen = document.getElementById('quiz-screen');
+        if (document.hidden && quizScreen.classList.contains('active')) {
+            document.getElementById('warning-overlay').style.display = 'flex';
+            document.getElementById('q-txt').style.opacity = '0'; document.getElementById('options-box').style.opacity = '0';
+        }
+    });
+
+    function confirmExit() {
+        document.getElementById('warning-overlay').style.display = 'none';
+        document.getElementById('q-txt').style.opacity = '1'; document.getElementById('options-box').style.opacity = '1';
+        startChapter(currentChapterIdx); 
+    }
+</script>
+</body>
+</html>
