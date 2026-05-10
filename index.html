@@ -1405,7 +1405,7 @@
         let avg = document.getElementById('avg-score').innerText;
         fetch(SCRIPT_URL, { 
             method: 'POST', mode: 'no-cors', 
-            body: JSON.stringify({ s: "TongKet10Chuong_Toan9", n: appState.sN, c: appState.sC, d: avg, r: 0 }) 
+            body: JSON.stringify({ s: "OnTapTracNghiem", n: appState.sN, c: appState.sC, d: avg, r: 0 }) 
         })
         .then(() => {
             btnSubmit.innerText = "ĐÃ NỘP BÀI THÀNH CÔNG";
