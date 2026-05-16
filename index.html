@@ -1367,7 +1367,7 @@
         document.getElementById('final-summary-screen').classList.add('active');
 
         let table = document.getElementById('summary-table-content');
-        table.innerHTML = "<tr><th>Chương</th><th>Số ý đúng</th><th>Điểm (Hệ 10)</th></tr>";
+        table.innerHTML = "<tr><th>Đề</th><th>Số ý đúng</th><th>Điểm (Hệ 10)</th></tr>";
 
         let totalScale10 = 0;
         
@@ -1375,10 +1375,10 @@
             let row = document.createElement('tr');
             let data = appState.scores[i];
             if(data) {
-                row.innerHTML = `<td>Chương ${i+1}</td><td>${data.raw} / ${data.max}</td><td style="color:var(--gold); font-weight:bold;">${data.scale10}</td>`;
+                row.innerHTML = `<td>Đề số ${i+1}</td><td>${data.raw} / ${data.max}</td><td style="color:var(--gold); font-weight:bold;">${data.scale10}</td>`;
                 totalScale10 += data.scale10;
             } else {
-                row.innerHTML = `<td>Chương ${i+1}</td><td colspan="2">Chưa làm</td>`;
+                row.innerHTML = `<td>Đề số ${i+1}</td><td colspan="2">Chưa làm</td>`;
             }
             table.appendChild(row);
         }
